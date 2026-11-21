@@ -1,0 +1,52 @@
+# Home Assistant Integration Examples for Matrix Acrylic 16x16 Display
+#
+# Once MQTT is enabled in the Matrix Display Setup page, the display automatically
+# registers via Home Assistant MQTT Discovery as one unified device ("Matrix Acrylic Display")
+# exposing:
+#   - light.matrix_display              (Power, Brightness, Effect = Display Mode)
+#   - select.display_mode               (All 18 modes)
+#   - select.playlist                   (All user playlists)
+#   - switch.playlist_loop              (Play/Pause playlist loop)
+#   - sensor.heart_rate                 (mmWave BPM)
+#   - sensor.temperature                (Indoor temperature)
+#   - sensor.air_quality                (Indoor AQI)
+
+# --- Example Lovelace Dashboard Card ---
+# type: entities
+# title: Matrix Acrylic 16×16
+# entities:
+#   - entity: light.matrix_display
+#   - entity: select.display_mode
+#   - entity: select.playlist
+#   - entity: switch.playlist_loop
+#   - entity: sensor.heart_rate
+#   - entity: sensor.air_quality
+
+# --- Example Automation: Switch to 3D Printer Mode when print finishes ---
+automation:
+  - alias: "Matrix Display - 3D Print Complete Alert"
+    trigger:
+      - platform: state
+        entity_id: sensor.3d_printer_state
+        to: "finish"
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.matrix_display
+        data:
+          brightness: 220
+          effect: printer_3d
+
+  - alias: "Matrix Display - Bedtime Cozy Fireplace"
+    trigger:
+      - platform: time
+        at: "21:30:00"
+    action:
+      - service: select.select_option
+        target:
+          entity_id: select.playlist
+        data:
+          option: ambient
+      - service: switch.turn_on
+        target:
+          entity_id: switch.playlist_loop

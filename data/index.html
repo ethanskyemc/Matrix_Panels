@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e1526" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>Matrix Acrylic 16×16</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <span>Matrix 16×16</span>
+    </div>
+    <div class="status-pills">
+      <span id="pillNet" class="pill">Local</span>
+      <span id="pillHa" class="pill">HA</span>
+      <button id="btnPower" class="btn small power-on">ON</button>
+    </div>
+  </header>
+
+  <div id="toast" class="toast">Saved</div>
+
+  <main class="container">
+    <!-- Live 8-inch Frosted Acrylic Preview -->
+    <section class="acrylic-stage">
+      <div class="acrylic-bezel">
+        <div class="acrylic-glass">
+          <canvas id="matrixPreview" width="320" height="320"></canvas>
+          <div class="acrylic-sheen"></div>
+        </div>
+      </div>
+      <div class="stage-meta">
+        <strong id="lblActiveMode">Clock</strong>
+        <span>•</span>
+        <span id="lblStatusText">Live 16×16 Acrylic Diffuser</span>
+      </div>
+    </section>
+
+    <!-- TAB 1: MODES & CONTROLS -->
+    <section id="tab-modes" class="tab-panel active">
+      <div class="card">
+        <h3>Display Controls</h3>
+        <div class="row">
+          <div style="flex:1">
+            <label>Brightness <span id="valBright">75%</span></label>
+            <input id="rngBright" type="range" min="0" max="255" value="190" />
+          </div>
+          <div style="flex:1">
+            <label>Speed <span id="valSpeed">1.0×</span></label>
+            <input id="rngSpeed" type="range" min="0.25" max="2.5" step="0.05" value="1.0" />
+          </div>
+        </div>
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div>
+              <label>Primary</label>
+              <input id="colPrimary" type="color" value="#40c4ff" />
+            </div>
+            <div>
+              <label>Accent</label>
+              <input id="colAccent" type="color" value="#ff68b4" />
+            </div>
+          </div>
+          <div style="flex:1;max-width:200px">
+            <label>Transition</label>
+            <select id="selTransition">
+              <option value="crossfade">Crossfade</option>
+              <option value="slide_left">Slide Left</option>
+              <option value="slide_up">Slide Up</option>
+              <option value="wipe_right">Wipe Right</option>
+              <option value="dissolve">Dissolve</option>
+              <option value="iris">Iris</option>
+              <option value="instant">Instant</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contextual Mode Settings -->
+      <div id="modeSettingsCard" class="card">
+        <h3 id="modeSettingsTitle">Mode Settings</h3>
+        <div id="modeSettingsBody"></div>
+      </div>
+
+      <!-- All 18 Display Modes -->
+      <div class="card">
+        <h3>Display Modes</h3>
+        <div id="modeGrid" class="mode-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: IMAGE & GIF UPLOADER -->
+    <section id="tab-upload" class="tab-panel">
+      <div class="card">
+        <h3>Upload Image or Animated GIF</h3>
+        <p style="margin:0 0 10px;font-size:12px;color:var(--muted)">
+          Crop, zoom, and tune PNG, JPG, or animated GIFs for the 16×16 acrylic panel. Works offline on your phone.
+        </p>
+        <input id="fileUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-bottom:10px;width:100%" />
+        <div class="crop-row">
+          <div class="crop-box" title="Drag to pan">
+            <canvas id="cropCanvas" width="210" height="210"></canvas>
+          </div>
+          <div>
+            <div class="mini-preview">
+              <canvas id="uploadPreview16" width="128" height="128"></canvas>
+            </div>
+            <div id="lblUploadMeta" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">No file loaded</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Zoom <span id="valZoom">1.0×</span></label>
+            <input id="rngZoom" type="range" min="1" max="4" step="0.05" value="1" />
+          </div>
+          <div>
+            <label>Resize Filter</label>
+            <select id="selResize">
+              <option value="area">Smooth (Area Avg)</option>
+              <option value="nearest">Crisp Pixel Art</option>
+            </select>
+          </div>
+          <div>
+            <label>Contrast</label>
+            <input id="rngContrast" type="range" min="0.5" max="2.0" step="0.05" value="1.15" />
+          </div>
+          <div>
+            <label>Saturation</label>
+            <input id="rngSat" type="range" min="0.5" max="2.2" step="0.05" value="1.25" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <input id="inpArtName" type="text" placeholder="Artwork name (e.g. Kirby)" />
+          <button id="btnUploadArt" class="btn primary">Save to Matrix</button>
+          <button id="btnSendAlbum" class="btn">As Album Art</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Saved Artwork &amp; GIFs</h3>
+        <div id="mediaGallery"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: PLAYLISTS -->
+    <section id="tab-playlists" class="tab-panel">
+      <div class="card">
+        <h3>
+          <span>Playlist Loop</span>
+          <label class="switch">
+            <input id="chkPlaylistPlay" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </h3>
+        <div class="row">
+          <select id="selPlaylist" style="flex:1"></select>
+          <button id="btnPlPrev" class="btn small">◀</button>
+          <button id="btnPlNext" class="btn small">▶</button>
+          <button id="btnNewPlaylist" class="btn small">+ New</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          <span>Pages in Playlist</span>
+          <button id="btnAddPage" class="btn small primary">+ Add Page</button>
+        </h3>
+        <div id="playlistPages"></div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnSavePlaylists" class="btn primary" style="flex:1">Save Playlists</button>
+          <button id="btnDelPlaylist" class="btn danger">Delete Playlist</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SCHEDULES & NIGHT MODE -->
+    <section id="tab-schedules" class="tab-panel">
+      <div class="card">
+        <h3>
+          <span>Nighttime Dimming</span>
+          <label class="switch">
+            <input id="chkNightDim" type="checkbox" checked />
+            <span class="slider"></span>
+          </label>
+        </h3>
+        <div class="grid-2">
+          <div><label>Start Time</label><input id="inpDimStart" type="time" value="22:00" /></div>
+          <div><label>End Time</label><input id="inpDimEnd" type="time" value="07:00" /></div>
+        </div>
+        <div style="margin-top:10px">
+          <label>Night Brightness <span id="valDimBright">16%</span></label>
+          <input id="rngDimBright" type="range" min="5" max="150" value="40" />
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          <span>Automatic Display-Off</span>
+          <label class="switch">
+            <input id="chkAutoOff" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </h3>
+        <div class="grid-2">
+          <div><label>Off Start</label><input id="inpOffStart" type="time" value="23:30" /></div>
+          <div><label>Off End</label><input id="inpOffEnd" type="time" value="06:30" /></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <span>Wake briefly on Motion</span>
+          <label class="switch">
+            <input id="chkWakeMotion" type="checkbox" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          <span>Scheduled Automations</span>
+          <button id="btnAddSchedule" class="btn small primary">+ Add Rule</button>
+        </h3>
+        <div id="scheduleList"></div>
+        <button id="btnSaveSchedules" class="btn primary" style="width:100%;margin-top:8px">Save Schedules</button>
+      </div>
+    </section>
+
+    <!-- TAB 5: SETUP, HOME ASSISTANT & SENSORS -->
+    <section id="tab-setup" class="tab-panel">
+      <div class="card">
+        <h3>Wi-Fi &amp; Network</h3>
+        <div class="grid-2">
+          <div><label>Wi-Fi SSID</label><input id="inpWifiSsid" type="text" placeholder="iot" /></div>
+          <div><label>Password</label><input id="inpWifiPass" type="password" placeholder="Leave blank to keep saved" /></div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div style="flex:1">
+            <label>mDNS Hostname</label>
+            <input id="inpHostname" type="text" value="matrix-acrylic" />
+          </div>
+          <button id="btnSaveWifi" class="btn primary" style="margin-top:16px">Save &amp; Connect</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          <span>Home Assistant &amp; MQTT</span>
+          <label class="switch">
+            <input id="chkHaEnabled" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </h3>
+        <div class="grid-2">
+          <div><label>HA URL</label><input id="inpHaUrl" type="text" value="http://homeassistant.local:8123" /></div>
+          <div><label>Long-Lived Token</label><input id="inpHaToken" type="password" placeholder="eyJ..." /></div>
+          <div><label>MQTT Broker Host</label><input id="inpMqttHost" type="text" value="homeassistant.local" /></div>
+          <div><label>MQTT Port</label><input id="inpMqttPort" type="number" value="1883" /></div>
+          <div><label>Weather Entity</label><input id="inpHaWeather" type="text" value="weather.home" /></div>
+          <div><label>Media Player Entity</label><input id="inpHaMedia" type="text" value="media_player.living_room" /></div>
+          <div><label>3D Printer Progress</label><input id="inpHaPrinterProg" type="text" value="sensor.3d_printer_progress" /></div>
+          <div><label>3D Printer State</label><input id="inpHaPrinterState" type="text" value="sensor.3d_printer_state" /></div>
+          <div><label>Indoor Temp Entity</label><input id="inpHaTemp" type="text" value="sensor.living_room_temperature" /></div>
+          <div><label>Air Quality Entity</label><input id="inpHaAqi" type="text" value="sensor.living_room_aqi" /></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Location &amp; Time Zone</h3>
+        <div class="grid-2">
+          <div>
+            <label>ZIP Code</label>
+            <input id="inpZip" type="text" inputmode="numeric" maxlength="10" placeholder="94103" value="94103" />
+          </div>
+          <div>
+            <label>Temperature Unit</label>
+            <select id="selUnits">
+              <option value="F">Fahrenheit (°F)</option>
+              <option value="C">Celsius (°C)</option>
+            </select>
+          </div>
+          <div style="grid-column:1 / -1">
+            <label>Time Zone</label>
+            <select id="selTzOffset">
+              <option value="-600">Hawaii (UTC-10)</option>
+              <option value="-540">Alaska Standard (UTC-9)</option>
+              <option value="-480">Pacific Standard / PST (UTC-8)</option>
+              <option value="-420">Pacific Daylight / Mountain Standard (UTC-7)</option>
+              <option value="-360">Mountain Daylight / Central Standard (UTC-6)</option>
+              <option value="-300">Central Daylight / Eastern Standard (UTC-5)</option>
+              <option value="-240">Eastern Daylight / Atlantic (UTC-4)</option>
+              <option value="0">UTC (UTC+0)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <span id="lblResolvedLoc" style="font-size:12px;color:var(--muted)">Resolved: San Francisco, CA</span>
+          <button id="btnAutoTz" class="btn small">Use Phone Timezone</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Matrix Orientation &amp; Wiring</h3>
+        <div class="grid-2">
+          <div>
+            <label>Rotation</label>
+            <select id="selMatrixRot">
+              <option value="0">0°</option>
+              <option value="1">90°</option>
+              <option value="2">180°</option>
+              <option value="3">270°</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:14px">
+            <span>Serpentine</span>
+            <label class="switch"><input id="chkSerpentine" type="checkbox" checked /><span class="slider"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span>Flip Horizontal</span>
+            <label class="switch"><input id="chkFlipX" type="checkbox" checked /><span class="slider"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span>Flip Vertical</span>
+            <label class="switch"><input id="chkFlipY" type="checkbox" /><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Connected Sensors</h3>
+        <div class="grid-2">
+          <div>
+            <label>Audio Input</label>
+            <select id="selAudioSrc">
+              <option value="i2s">I2S Mic (INMP441)</option>
+              <option value="adc">Analog ADC Mic</option>
+              <option value="stream">Phone / Browser Mic</option>
+            </select>
+          </div>
+          <div>
+            <label>mmWave Vital-Sign Sensor</label>
+            <select id="selMmwave">
+              <option value="mr60bha1">Seeed MR60BHA1 (60GHz)</option>
+              <option value="mr60bha2">Seeed MR60BHA2 (60GHz)</option>
+              <option value="ld2410">HLK-LD2410 (Presence)</option>
+              <option value="ha">Home Assistant Sensor</option>
+            </select>
+          </div>
+          <div>
+            <label>Air Quality / Temp Sensor</label>
+            <select id="selEnvSensor">
+              <option value="bme680">BME680 (I2C Temp/Hum/IAQ)</option>
+              <option value="scd4x">SCD4x (I2C CO2/Temp)</option>
+              <option value="sht4x">SHT4x (I2C Temp/Hum)</option>
+              <option value="ha">Home Assistant Sensors</option>
+            </select>
+          </div>
+          <div>
+            <label>Camera URL (Optional)</label>
+            <input id="inpCamUrl" type="text" placeholder="Blank = Phone Camera" />
+          </div>
+        </div>
+        <button id="btnSaveConfig" class="btn primary" style="width:100%;margin-top:12px">Save All Configuration</button>
+      </div>
+
+      <!-- Live Sensor / HA Test Controls (works in both simulator & device) -->
+      <div class="card">
+        <h3>Live Sensor &amp; HA Feed Tester</h3>
+        <div class="grid-2">
+          <div>
+            <label>Weather Condition</label>
+            <select id="simWeatherCond">
+              <option value="0">Sunny</option>
+              <option value="1">Clear Night</option>
+              <option value="2" selected>Partly Cloudy</option>
+              <option value="3">Cloudy</option>
+              <option value="4">Rain</option>
+              <option value="5">Thunderstorm</option>
+              <option value="6">Snow</option>
+              <option value="7">Fog</option>
+            </select>
+          </div>
+          <div>
+            <label>Outdoor Temp (°C)</label>
+            <input id="simWeatherTemp" type="number" value="21" />
+          </div>
+          <div>
+            <label>3D Printer State</label>
+            <select id="simPrinterState">
+              <option value="0">Idle</option>
+              <option value="1">Heating</option>
+              <option value="2" selected>Printing</option>
+              <option value="3">Paused</option>
+              <option value="4">Complete (Alert!)</option>
+              <option value="5">Error</option>
+            </select>
+          </div>
+          <div>
+            <label>3D Print Progress (<span id="valSimProg">68%</span>)</label>
+            <input id="simPrinterProg" type="range" min="0" max="100" value="68" />
+          </div>
+          <div>
+            <label>Heart Rate (<span id="valSimBpm">72</span> BPM)</label>
+            <input id="simBpm" type="range" min="48" max="155" value="72" />
+          </div>
+          <div>
+            <label>Air Quality (<span id="valSimAqi">28</span> AQI)</label>
+            <input id="simAqi" type="range" min="5" max="260" value="28" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnSimApply" class="btn primary" style="flex:1">Push Sensor Data</button>
+          <button id="btnSimMotion" class="btn">Trigger Motion</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="modes"><span>✦</span>Modes</button>
+    <button class="nav-btn" data-tab="upload"><span>🖼</span>Upload</button>
+    <button class="nav-btn" data-tab="playlists"><span>☰</span>Playlists</button>
+    <button class="nav-btn" data-tab="schedules"><span>◷</span>Schedule</button>
+    <button class="nav-btn" data-tab="setup"><span>⚙</span>Setup</button>
+  </nav>
+
+  <script src="/gif_decoder.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

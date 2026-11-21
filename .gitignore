@@ -1,0 +1,6 @@
+.pio/
+.vscode/
+sim/matrix_sim
+*.pyc
+__pycache__/
+.DS_Store
